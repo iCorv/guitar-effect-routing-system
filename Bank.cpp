@@ -18,7 +18,10 @@ void Bank::loadPreset(int t_numPreset) {
 void Bank::savePreset() {
 	int offset = m_currPresetNum*m_numLoops+m_currBankNum*m_numLoopsPerPreset;
 	for(int j = 0; j < m_numLoops; j++) {
-		EEPROM.write(j+offset, m_tempPreset.fxLoops[j]);
+		// EEPROM.put uses EEPROM.update. Data will only be written if it is different from Data already saved.
+		// Since we only save boolean it is highly likely we dont need to write!
+		// This increases the lifetime of eeprom.
+		EEPROM.put(j+offset, m_tempPreset.fxLoops[j]);
 	}
 	loadPreset(m_currPresetNum);
 }

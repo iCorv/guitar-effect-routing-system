@@ -19,18 +19,8 @@
 #define LED_3 43
 #define LED_2 44
 #define LED_1 45
-// pins where the relay modules are connected
-#define RELAY_1 25
-#define RELAY_1 24
-#define RELAY_1 23
-#define RELAY_1 22
-#define RELAY_1 21
-#define RELAY_1 20
-#define RELAY_1 19
-#define RELAY_1 18
-#define RELAY_1 38
-#define RELAY_1 39
 
+enum Modus { PLAY, PRESET, PROGRAM };
 
 class Control
 {
@@ -44,12 +34,15 @@ public:
 		m_debouncerTap(Bounce()),
 		m_debouncerBankUp(Bounce()),
 		m_debouncerBankDown(Bounce()),
+		m_currMode(PRESET)
 	{
 
 	}
 	void initControl();
+	boolean switchListener();
+	Modus getCurrentMode();
 private:
-	// Instantiate a Bounce object
+	// Instantiate Bounce objects
 	Bounce m_debouncer1; 
 	Bounce m_debouncer2; 
 	Bounce m_debouncer3; 
@@ -58,7 +51,12 @@ private:
 	Bounce m_debouncerTap;
 	Bounce m_debouncerBankUp;
 	Bounce m_debouncerBankDown;
-	const int m_bounceInterval{ 5 } // cool-down time of buttons in ms
+	const int m_bounceInterval{ 5 }; // cool-down time of buttons in ms
+	const int m_relayPins[10] = {25,24,23,22,21,20,19,18,38,39}; // pins of relay modules
+	const int m_numRelays{ 10 }; // number of relays
+	void startJingle();
+	void blinkLED(int t_time, int t_repeats, boolean t_lowOrHigh);
+	Modus m_currMode;
 };
 
 
