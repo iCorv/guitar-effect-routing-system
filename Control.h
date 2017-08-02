@@ -1,6 +1,8 @@
 #pragma once
 #include <Arduino.h>
 #include <Bounce2.h>
+#include <ArdOSCForSerial.h>
+#include "Bank.h"
 
 // button and switch pins
 #define BUTTON_5 8
@@ -34,13 +36,23 @@ public:
 		m_debouncerTap(Bounce()),
 		m_debouncerBankUp(Bounce()),
 		m_debouncerBankDown(Bounce()),
-		m_currMode(PRESET)
+		m_currMode(PRESET),
+		m_prevMode(PRESET),
+		m_Bank(Bank())
 	{
-
+		for(int i = 8; i < m_numRelays; i++) {
+			playModeRelayStatus.fxLoops[i] = true;
+		}
 	}
 	void initControl();
+	void startJingle();
 	boolean switchListener();
 	Modus getCurrentMode();
+	void playMode();
+	void progMode();
+	void loadCurrentPreset() ;
+	void setLoop(int t_loopNum, boolean t_status);
+	void savePreset();
 private:
 	// Instantiate Bounce objects
 	Bounce m_debouncer1; 
@@ -51,12 +63,21 @@ private:
 	Bounce m_debouncerTap;
 	Bounce m_debouncerBankUp;
 	Bounce m_debouncerBankDown;
-	const int m_bounceInterval{ 5 }; // cool-down time of buttons in ms
-	const int m_relayPins[10] = {25,24,23,22,21,20,19,18,38,39}; // pins of relay modules
-	const int m_numRelays{ 10 }; // number of relays
-	void startJingle();
+	const uint8_t m_bounceInterval{ 5 }; // cool-down time of buttons in ms
+	const uint8_t m_relayPins[10] = {25,24,23,22,21,20,19,18,38,39}; // pins of relay modules
+	const uint8_t m_numRelays{ 10 }; // number of relays
+
+	void toggleRelay(boolean *t_relayNum);
 	void blinkLED(int t_time, int t_repeats, boolean t_lowOrHigh);
+	void updateButtonStatus();
+	void playModeButton();
 	Modus m_currMode;
+	Modus m_prevMode;
+
+	Bank m_Bank;
+	preset playModeRelayStatus;
+	preset currRelayStatus;
+	preset resetRelayStatus;
 };
 
 

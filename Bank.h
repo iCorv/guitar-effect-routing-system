@@ -14,10 +14,12 @@ public:
 		  m_currPresetNum(0)
 	{
 		loadBank();
+		printPreset(m_currPresetNum);
 	}
 	preset* BankUp();
 	preset* BankDown();
 	preset* getCurrentBank();
+	preset getCurrentPreset();
   	void setLoop(int t_loopNum, boolean t_status);
   	void savePreset();
   	void printPreset(int t_numPreset);

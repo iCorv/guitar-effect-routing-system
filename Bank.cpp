@@ -1,6 +1,9 @@
 #include "Bank.h"
 
-
+preset Bank::getCurrentPreset() {
+	loadPreset(m_currPresetNum);
+	return m_currPresets[m_currPresetNum];
+}
 
 void Bank::loadBank() {
 	for(int i = 0; i < m_numPresets; i++) {

@@ -52,22 +52,104 @@ void Control::initControl() {
 
 boolean Control::switchListener() {
 	if(digitalRead(SWITCH_1) == HIGH) {
+		m_prevMode = m_currMode;
 		m_currMode = PLAY;
 		//Serial.println("Play Mode!");
 		return true;
 	}
 	if(digitalRead(SWITCH_2) == HIGH) {
+		m_prevMode = m_currMode;
 		m_currMode = PROGRAM;
 		//Serial.println("Program Mode!");
 		return true;
 	}else{
+		m_prevMode = m_currMode;
 		m_currMode = PRESET;
 		return true;
 	}
 }
 
+void Control::toggleRelay(boolean *t_relayStatus) {
+	for(int i = 0; i < m_numRelays; i++) {
+		if(t_relayStatus[i] != currRelayStatus.fxLoops[i]) {
+			digitalWrite(m_relayPins[i], HIGH);
+			currRelayStatus.fxLoops[i] = !currRelayStatus.fxLoops[i];
+		}
+	}
+	delay(8);
+	for(int i = 0; i < m_numRelays; i++) {
+		digitalWrite(m_relayPins[i], LOW);
+	}
+}
+
+void Control::progMode() {
+	if(m_prevMode != m_currMode) {
+		toggleRelay(resetRelayStatus.fxLoops);
+	}
+}
+
+void Control::loadCurrentPreset() {
+	preset currPreset = m_Bank.getCurrentPreset();
+	toggleRelay(currPreset.fxLoops);
+}
+
+void Control::playMode() {
+	if(m_prevMode != m_currMode) {
+		toggleRelay(playModeRelayStatus.fxLoops);
+	}
+	updateButtonStatus();
+	playModeButton();
+	toggleRelay(playModeRelayStatus.fxLoops);
+}
+
 Modus Control::getCurrentMode() {
 	return m_currMode;
+}
+
+void Control::updateButtonStatus() {
+	m_debouncer1.update(); 
+	m_debouncer2.update(); 
+	m_debouncer3.update(); 
+	m_debouncer4.update(); 
+	m_debouncer5.update();
+	m_debouncerTap.update();
+	m_debouncerBankUp.update();
+	m_debouncerBankDown.update();
+}
+
+void Control::playModeButton() {
+	if(m_debouncerBankDown.rose()) {
+		playModeRelayStatus.fxLoops[7] = !playModeRelayStatus.fxLoops[7];
+	}
+	if(m_debouncerBankUp.rose()) {
+		playModeRelayStatus.fxLoops[6] = !playModeRelayStatus.fxLoops[6];
+	}
+	if(m_debouncerTap.rose()) {
+		playModeRelayStatus.fxLoops[5] = !playModeRelayStatus.fxLoops[5];
+	}
+	if(m_debouncer1.rose()) {
+		playModeRelayStatus.fxLoops[4] = !playModeRelayStatus.fxLoops[4];
+	}
+	if(m_debouncer2.rose()) {
+		playModeRelayStatus.fxLoops[3] = !playModeRelayStatus.fxLoops[3];
+	}
+	if(m_debouncer3.rose()) {
+		playModeRelayStatus.fxLoops[2] = !playModeRelayStatus.fxLoops[2];
+	}
+	if(m_debouncer4.rose()) {
+		playModeRelayStatus.fxLoops[1] = !playModeRelayStatus.fxLoops[1];
+	}
+	if(m_debouncer5.rose()) {
+		playModeRelayStatus.fxLoops[0] = !playModeRelayStatus.fxLoops[0];
+	}
+}
+
+void Control::setLoop(int t_loopNum, boolean t_status) {
+	m_Bank.setLoop(t_loopNum,t_status);
+}
+
+void Control::savePreset() {
+	m_Bank.savePreset();
 }
 
 // t_lowOrHigh = true - starts with LED on, else with LED off
@@ -107,4 +189,3 @@ void Control::startJingle() {
 	// blink two times
 	blinkLED(100,9,false);
 }
-
