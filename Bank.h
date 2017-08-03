@@ -14,15 +14,17 @@ public:
 		  m_currPresetNum(0)
 	{
 		loadBank();
-		printPreset(m_currPresetNum);
 	}
 	preset* BankUp();
 	preset* BankDown();
-	preset* getCurrentBank();
+	int getCurrentBank();
 	preset getCurrentPreset();
   	void setLoop(int t_loopNum, boolean t_status);
   	void savePreset();
+    void setPresetNum(int t_value);
+    void setBankNum(int t_value);
   	void printPreset(int t_numPreset);
+  	void reset();
 private:
 	const uint8_t m_numBanks{ 5 }; // change if more presets are needed
 	const uint8_t m_numPresets{ 5 }; // number of presets per Bank

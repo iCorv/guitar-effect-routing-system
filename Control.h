@@ -21,8 +21,10 @@
 #define LED_3 43
 #define LED_2 44
 #define LED_1 45
+// tap output
+#define TAP_OUT 40
 
-enum Modus { PLAY, PRESET, PROGRAM };
+enum Modus { PLAY, PRESET, PROGRAM, START, OFF };
 
 class Control
 {
@@ -36,8 +38,8 @@ public:
 		m_debouncerTap(Bounce()),
 		m_debouncerBankUp(Bounce()),
 		m_debouncerBankDown(Bounce()),
-		m_currMode(PRESET),
-		m_prevMode(PRESET),
+		m_currMode(START),
+		m_prevMode(OFF),
 		m_Bank(Bank())
 	{
 		for(int i = 8; i < m_numRelays; i++) {
@@ -50,9 +52,12 @@ public:
 	Modus getCurrentMode();
 	void playMode();
 	void progMode();
+	void presetMode();
 	void loadCurrentPreset() ;
 	void setLoop(int t_loopNum, boolean t_status);
 	void savePreset();
+  	void changePreset(int t_value);
+  	void changeBank(int t_value);
 private:
 	// Instantiate Bounce objects
 	Bounce m_debouncer1; 
@@ -64,13 +69,19 @@ private:
 	Bounce m_debouncerBankUp;
 	Bounce m_debouncerBankDown;
 	const uint8_t m_bounceInterval{ 5 }; // cool-down time of buttons in ms
-	const uint8_t m_relayPins[10] = {25,24,23,22,21,20,19,18,38,39}; // pins of relay modules
+	const uint8_t m_relayPins[10] = {25,24,23,22,21,20,18,19,39,38}; // pins of relay modules
 	const uint8_t m_numRelays{ 10 }; // number of relays
+	const uint8_t m_ledPins[5] = {LED_1, LED_2, LED_3, LED_4, LED_5};
 
 	void toggleRelay(boolean *t_relayNum);
-	void blinkLED(int t_time, int t_repeats, boolean t_lowOrHigh);
+	void blinkLED(int t_time, int t_repeats, int numLED, boolean t_lowOrHigh);
 	void updateButtonStatus();
 	void playModeButton();
+	void presetModeButton();
+	void toggleLED(int t_ledPin);
+	void lightOut();
+	void bankUp();
+	void bankDown();
 	Modus m_currMode;
 	Modus m_prevMode;
 

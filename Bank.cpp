@@ -1,8 +1,11 @@
 #include "Bank.h"
 
 preset Bank::getCurrentPreset() {
-	loadPreset(m_currPresetNum);
 	return m_currPresets[m_currPresetNum];
+}
+
+int Bank::getCurrentBank() {
+	return m_currBankNum;
 }
 
 void Bank::loadBank() {
@@ -31,6 +34,23 @@ void Bank::savePreset() {
 
 void Bank::setLoop(int t_loopNum, boolean t_status) {
  	m_tempPreset.fxLoops[t_loopNum] = t_status;
+}
+
+void Bank::setPresetNum(int t_value) {
+  	m_currPresetNum = t_value;
+  	loadPreset(m_currPresetNum);
+}
+
+void Bank::setBankNum(int t_value) {
+	m_currPresetNum = 0;
+  	m_currBankNum = t_value;
+  	loadBank();
+}
+
+void Bank::reset() {
+	m_currPresetNum = 0;
+	m_currBankNum = 0;
+	loadBank();
 }
 
 void Bank::printPreset(int t_numPreset) {

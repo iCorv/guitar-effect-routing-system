@@ -7,12 +7,12 @@ OSCServer server(&Serial, networkTimeoutMillis);   // the OSC Server will get it
 
 void setup() {
   Serial.begin(115200);
-  //myBank.setLoop(7,true);
-  //myBank.savePreset();
-  //myBank.printPreset(1);
+
   myControl.initControl();
   server.addCallback("/ard/fxloops", &setFxLoops);
   server.addCallback("/ard/save", &saveFxLoops);
+  server.addCallback("/ard/preset", &setPresetNum);
+  server.addCallback("/ard/bank", &setBankNum);
 }
 
 void loop() {
@@ -31,6 +31,7 @@ void loop() {
       myControl.progMode();
       break;
     case PRESET:
+    myControl.presetMode();
       // keep serial clean so no stray msg are left when going to progMode
       Serial.flush();
       break;
@@ -38,6 +39,16 @@ void loop() {
       break;  
   }
 
+}
+
+void setPresetNum(OSCMessage *t_mes) {
+  int presetNum = t_mes->getArgInt32(0);
+  myControl.changePreset(presetNum);
+}
+
+void setBankNum(OSCMessage *t_mes) {
+  int bankNum = t_mes->getArgInt32(0);
+  myControl.changeBank(bankNum);
 }
 
 void saveFxLoops(OSCMessage *t_mes) {
@@ -50,9 +61,9 @@ void setFxLoops(OSCMessage *t_mes) {
   for(int i = 0; i < 10; i++) {
     float loopStatus = t_mes->getArgFloat(i);
     if(loopStatus == 1.0) {
-      myControl.setLoop(i, true);
+      myControl.setLoop(9-i, true);
     }else{
-      myControl.setLoop(i, false);
+      myControl.setLoop(9-i, false);
     }
   }
 }

@@ -39,6 +39,10 @@ void Control::initControl() {
   	pinMode(LED_4,OUTPUT);
   	pinMode(LED_5,OUTPUT);
 
+  	// setup tap output
+  	pinMode(TAP_OUT, OUTPUT);
+  	digitalWrite(TAP_OUT, LOW);
+
   	// Setup relay pins
   	for(int i = 0; i < m_numRelays; i++) {
   		pinMode(m_relayPins[i], OUTPUT);
@@ -82,20 +86,67 @@ void Control::toggleRelay(boolean *t_relayStatus) {
 	}
 }
 
-void Control::progMode() {
+void Control::presetMode() {
 	if(m_prevMode != m_currMode) {
-		toggleRelay(resetRelayStatus.fxLoops);
+		m_Bank.reset();
+		changePreset(0);
+	}
+	updateButtonStatus();
+	presetModeButton();
+}
+
+void Control::presetModeButton() {
+	if(m_debouncerBankDown.rose()) {
+		bankDown();
+	}
+	if(m_debouncerBankUp.rose()) {
+		bankUp();
+	}
+	if(m_debouncerTap.rose()) {
+		//digitalWrite(TAP_OUT, HIGH);
+		//delay(3);
+		digitalWrite(TAP_OUT, HIGH);
+		delay(40);
+		digitalWrite(TAP_OUT, LOW);
+	}
+	if(m_debouncer1.rose()) {
+		changePreset(0);
+	}
+	if(m_debouncer2.rose()) {
+		changePreset(1);
+	}
+	if(m_debouncer3.rose()) {
+		changePreset(2);
+	}
+	if(m_debouncer4.rose()) {
+		changePreset(3);
+	}
+	if(m_debouncer5.rose()) {
+		changePreset(4);
 	}
 }
 
+void Control::progMode() {
+	if(m_prevMode != m_currMode) {
+		toggleRelay(resetRelayStatus.fxLoops);
+		lightOut();
+	}
+}
+
+void Control::changePreset(int t_value) {
+  	m_Bank.setPresetNum(t_value);
+  	loadCurrentPreset();
+  	toggleLED(m_ledPins[t_value]);
+}
+
 void Control::loadCurrentPreset() {
-	preset currPreset = m_Bank.getCurrentPreset();
-	toggleRelay(currPreset.fxLoops);
+	toggleRelay(m_Bank.getCurrentPreset().fxLoops);
 }
 
 void Control::playMode() {
 	if(m_prevMode != m_currMode) {
 		toggleRelay(playModeRelayStatus.fxLoops);
+		lightOut();
 	}
 	updateButtonStatus();
 	playModeButton();
@@ -119,10 +170,10 @@ void Control::updateButtonStatus() {
 
 void Control::playModeButton() {
 	if(m_debouncerBankDown.rose()) {
-		playModeRelayStatus.fxLoops[7] = !playModeRelayStatus.fxLoops[7];
+		playModeRelayStatus.fxLoops[6] = !playModeRelayStatus.fxLoops[6];
 	}
 	if(m_debouncerBankUp.rose()) {
-		playModeRelayStatus.fxLoops[6] = !playModeRelayStatus.fxLoops[6];
+		playModeRelayStatus.fxLoops[7] = !playModeRelayStatus.fxLoops[7];
 	}
 	if(m_debouncerTap.rose()) {
 		playModeRelayStatus.fxLoops[5] = !playModeRelayStatus.fxLoops[5];
@@ -154,24 +205,32 @@ void Control::savePreset() {
 
 // t_lowOrHigh = true - starts with LED on, else with LED off
 // this function uses delay therefore blocks all
-void Control::blinkLED(int t_time, int t_repeats, boolean t_lowOrHigh) {
+void Control::blinkLED(int t_time, int t_repeats, int numLED, boolean t_lowOrHigh) {
 	for(int i = 0; i < t_repeats; i++) {
 		if(t_lowOrHigh) {
-			digitalWrite(LED_5, HIGH);
-			digitalWrite(LED_4, HIGH);
-			digitalWrite(LED_3, HIGH);
-			digitalWrite(LED_2, HIGH);
-			digitalWrite(LED_1, HIGH);
+			for(int j = 0; j < numLED; j++) {
+				digitalWrite(m_ledPins[j],HIGH);
+			}
 			t_lowOrHigh = !t_lowOrHigh;
 		}else{
-			digitalWrite(LED_5, LOW);
-			digitalWrite(LED_4, LOW);
-			digitalWrite(LED_3, LOW);
-			digitalWrite(LED_2, LOW);
-			digitalWrite(LED_1, LOW);
+			for(int j = 0; j < numLED; j++) {
+				digitalWrite(m_ledPins[j],LOW);
+			}
 			t_lowOrHigh = !t_lowOrHigh;
 		}
 		delay(t_time);
+	}
+}
+
+// switch off all leds then light up the one specified
+void Control::toggleLED(int t_ledPin) {
+	lightOut();
+	digitalWrite(t_ledPin, HIGH);
+}
+// switch off all leds
+void Control::lightOut() {
+	for(int i = 0; i < 5; i++){
+		digitalWrite(m_ledPins[i], LOW);
 	}
 }
 
@@ -187,5 +246,33 @@ void Control::startJingle() {
 	digitalWrite(LED_5, HIGH);
 	delay(300);
 	// blink two times
-	blinkLED(100,9,false);
+	blinkLED(100,9, 5, false);
+}
+
+
+void Control::changeBank(int t_value) {
+	m_Bank.setBankNum(t_value);
+	loadCurrentPreset();
+	blinkLED(100, 9, t_value+1, true);
+  	toggleLED(LED_1);
+}
+
+void Control::bankUp() {
+	int t_currBank = m_Bank.getCurrentBank();
+	// wrap to first bank if we already reached the last bank 
+	if(t_currBank == 4) {
+		changeBank(0);
+	}else{
+		changeBank(t_currBank+1);
+	}
+}
+
+void Control::bankDown() {
+	int t_currBank = m_Bank.getCurrentBank();
+	// wrap to last bank if we already reached the first bank 
+	if(t_currBank == 0) {
+		changeBank(4);
+	}else{
+		changeBank(t_currBank-1);
+	}
 }
